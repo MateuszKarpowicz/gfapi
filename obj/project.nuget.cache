@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "+4780f0a9SsrZ4l3hXqzG5+9oDiNH16CG6TQOHvKasOsduUjE74FZ7i9VFV9sNKI6998lLetfwau7Wpm2kEmGw==",
+  "dgSpecHash": "uhFW48XiqACQs4Ltu1STXAs3HY1Eyd2chnVTLBEScs4Iix2C5On3CaWZh3Xr+JyergnnRKQEDKBk68mpSlcrtA==",
   "success": true,
   "projectFilePath": "/Users/sinemetu/Desktop/HACK/GoldFinger/goldfingerapi/GFapi/GFapi.csproj",
   "expectedPackageFiles": [
@@ -29,6 +29,7 @@
     "/Users/sinemetu/.nuget/packages/microsoft.win32.primitives/4.3.0/microsoft.win32.primitives.4.3.0.nupkg.sha512",
     "/Users/sinemetu/.nuget/packages/mono.texttemplating/2.2.1/mono.texttemplating.2.2.1.nupkg.sha512",
     "/Users/sinemetu/.nuget/packages/netstandard.library/1.6.1/netstandard.library.1.6.1.nupkg.sha512",
+    "/Users/sinemetu/.nuget/packages/newtonsoft.json/13.0.3/newtonsoft.json.13.0.3.nupkg.sha512",
     "/Users/sinemetu/.nuget/packages/npgsql/7.0.6/npgsql.7.0.6.nupkg.sha512",
     "/Users/sinemetu/.nuget/packages/npgsql.entityframeworkcore.postgresql/7.0.11/npgsql.entityframeworkcore.postgresql.7.0.11.nupkg.sha512",
     "/Users/sinemetu/.nuget/packages/npgsql.entityframeworkcore.postgresql.design/1.1.0/npgsql.entityframeworkcore.postgresql.design.1.1.0.nupkg.sha512",

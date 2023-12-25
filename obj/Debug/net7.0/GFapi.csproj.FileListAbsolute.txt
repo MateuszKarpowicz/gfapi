@@ -43,3 +43,5 @@
 /Users/sinemetu/Desktop/HACK/GoldFinger/goldfingerapi/GFapi/bin/Debug/net7.0/Microsoft.Extensions.DependencyModel.dll
 /Users/sinemetu/Desktop/HACK/GoldFinger/goldfingerapi/GFapi/bin/Debug/net7.0/Mono.TextTemplating.dll
 /Users/sinemetu/Desktop/HACK/GoldFinger/goldfingerapi/GFapi/bin/Debug/net7.0/System.CodeDom.dll
+/Users/sinemetu/Desktop/HACK/GoldFinger/goldfingerapi/GFapi/bin/Debug/net7.0/GFapi.staticwebassets.runtime.json
+/Users/sinemetu/Desktop/HACK/GoldFinger/goldfingerapi/GFapi/bin/Debug/net7.0/Newtonsoft.Json.dll

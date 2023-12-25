@@ -4,97 +4,115 @@ using GFapi.Models;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 
-[Route("api/[controller]")]
-[ApiController]
-public class ActorsController : ControllerBase
+namespace GFapi.Controllers
 {
-    private readonly DataContext _context;
-
-    public ActorsController(DataContext context)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ActorsController : ControllerBase
     {
-        _context = context;
-    }
+        private readonly DataContext _context;
 
-    // GET: api/Actors
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Actor>>> GetActors()
-    {
-        return await _context.Actors.ToListAsync();
-    }
-
-    // GET: api/Actors/5
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Actor>> GetActor(int id)
-    {
-        var actor = await _context.Actors.FindAsync(id);
-
-        if (actor == null)
+        public ActorsController(DataContext context)
         {
-            return NotFound();
+            _context = context;
         }
 
-        return actor;
-    }
-
-    // PUT: api/Actors/5
-    [HttpPut("{id}")]
-    public async Task<IActionResult> PutActor(int id, Actor actor)
-    {
-        if (id != actor.Id)
+        // GET: api/Actors
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Actor>>> GetActors()
         {
-            return BadRequest();
+            return await _context.Actors.ToListAsync();
         }
 
-        _context.Entry(actor).State = EntityState.Modified;
+        // GET: api/Actors/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Actor>> GetActor(int id)
+        {
+            var actor = await _context.Actors.FindAsync(id);
 
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!ActorExists(id))
+            if (actor == null)
             {
                 return NotFound();
             }
-            else
-            {
-                throw;
-            }
+
+            return actor;
         }
 
-        return NoContent();
-    }
-
-    // POST: api/Actors
-    [HttpPost]
-    public async Task<ActionResult<Actor>> PostActor(Actor actor)
-    {
-        _context.Actors.Add(actor);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction("GetActor", new { id = actor.Id }, actor);
-    }
-
-    // DELETE: api/Actors/5
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteActor(int id)
-    {
-        var actor = await _context.Actors.FindAsync(id);
-        if (actor == null)
+        // PUT: api/Actors/5
+        // Update an existing actor
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutActor(int id, [FromBody] Actor actor)
         {
-            return NotFound();
+            if (id != actor.Id)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            _context.Entry(actor).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ActorExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
         }
 
-        _context.Actors.Remove(actor);
-        await _context.SaveChangesAsync();
+        // POST: api/Actors
+        // Create a new actor
+        [HttpPost]
+        public async Task<ActionResult<Actor>> PostActor([FromBody] Actor actor)
+        {
+            if (actor == null)
+            {
+                return BadRequest("Invalid actor data.");
+            }
 
-        return NoContent();
-    }
+            _context.Actors.Add(actor);
+            await _context.SaveChangesAsync();
 
-    private bool ActorExists(int id)
-    {
-        return _context.Actors.Any(e => e.Id == id);
+            return CreatedAtAction("GetActor", new { id = actor.Id }, actor);
+        }
+
+        // DELETE: api/Actors/5
+        // Delete an actor
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteActor(int id)
+        {
+            var actor = await _context.Actors.FindAsync(id);
+            if (actor == null)
+            {
+                return NotFound();
+            }
+
+            _context.Actors.Remove(actor);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool ActorExists(int id)
+        {
+            return _context.Actors.Any(e => e.Id == id);
+        }
     }
 }
