@@ -24,14 +24,14 @@ namespace GFapi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Actor>>> GetActors()
         {
-            return await _context.Actors.ToListAsync();
+            return await _context.Actors.Include(a => a.Photos).ToListAsync();
         }
 
         // GET: api/Actors/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Actor>> GetActor(int id)
         {
-            var actor = await _context.Actors.FindAsync(id);
+            var actor = await _context.Actors.Include(a => a.Photos).FirstOrDefaultAsync(a => a.Id == id);
 
             if (actor == null)
             {
@@ -44,9 +44,9 @@ namespace GFapi.Controllers
         // PUT: api/Actors/5
         // Update an existing actor
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutActor(int id, [FromBody] Actor actor)
+        public async Task<IActionResult> PutActor(int id, [FromBody] ActorInputModel actorInputModel)
         {
-            if (id != actor.Id)
+            if (id != actorInputModel.Actor.Id)
             {
                 return BadRequest();
             }
@@ -56,59 +56,116 @@ namespace GFapi.Controllers
                 return BadRequest(ModelState);
             }
 
-            _context.Entry(actor).State = EntityState.Modified;
+             var actor = await _context.Actors.FindAsync(id);
+    if (actor == null)
+    {
+        return NotFound();
+    }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ActorExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+    // Update actor details
+    _context.Entry(actor).CurrentValues.SetValues(actorInputModel.Actor);
 
-            return NoContent();
-        }
+    // Handle MainImageUrl updates
+    if (actor.MainImageUrl != actorInputModel.MainImageUrl)
+    {
+        actor.MainImageUrl = actorInputModel.MainImageUrl;
+    }
 
-        // POST: api/Actors
-        // Create a new actor
-        [HttpPost]
-        public async Task<ActionResult<Actor>> PostActor([FromBody] Actor actor)
+    // Handle GalleryImageUrls updates
+    // First remove URLs that are not in the new list
+    var currentUrls = actor.GalleryImageUrls.ToList();
+    foreach (var url in currentUrls)
+    {
+        if (!actorInputModel.GalleryImageUrls.Contains(url))
         {
-            if (actor == null)
+            actor.GalleryImageUrls.Remove(url);
+        }
+    }
+
+    // Then add new URLs
+    foreach (var url in actorInputModel.GalleryImageUrls)
+    {
+        if (!actor.GalleryImageUrls.Contains(url))
+        {
+            actor.GalleryImageUrls.Add(url);
+        }
+    }
+
+    // Save changes
+    try
+    {
+        await _context.SaveChangesAsync();
+    }
+    catch (DbUpdateConcurrencyException)
+    {
+        if (!ActorExists(id))
+        {
+            return NotFound();
+        }
+        else
+        {
+            throw;
+        }
+    }
+
+    return NoContent();
+}
+
+       // POST: api/Actors
+// Create a new actor
+        [HttpPost]
+        public async Task<ActionResult<Actor>> PostActor([FromBody] ActorInputModel actorInputModel)
+        {
+            if (actorInputModel == null || actorInputModel.Actor == null)
             {
                 return BadRequest("Invalid actor data.");
             }
 
-            _context.Actors.Add(actor);
+            // Normalize the BirthDate to UTC if it exists
+            if (actorInputModel.Actor.BirthDate.HasValue)
+            {
+                actorInputModel.Actor.BirthDate = DateTime.SpecifyKind(actorInputModel.Actor.BirthDate.Value, DateTimeKind.Utc);
+            }
+
+            // Set MainImageUrl and GalleryImageUrls from input model
+            actorInputModel.Actor.MainImageUrl = actorInputModel.MainImageUrl;
+            actorInputModel.Actor.GalleryImageUrls = actorInputModel.GalleryImageUrls ?? new List<string>(); // Ensure there is always a list to avoid null references
+
+            // Add the new actor to the context
+            _context.Actors.Add(actorInputModel.Actor);
+
+            // Save the changes
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetActor", new { id = actor.Id }, actor);
+            // Return the created actor
+            return CreatedAtAction("GetActor", new { id = actorInputModel.Actor.Id }, actorInputModel.Actor);
         }
+
 
         // DELETE: api/Actors/5
         // Delete an actor
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteActor(int id)
-        {
-            var actor = await _context.Actors.FindAsync(id);
-            if (actor == null)
-            {
-                return NotFound();
-            }
+public async Task<IActionResult> DeleteActor(int id)
+{
+    var actor = await _context.Actors.Include(a => a.Photos).FirstOrDefaultAsync(a => a.Id == id);
+    if (actor == null)
+    {
+        return NotFound();
+    }
 
-            _context.Actors.Remove(actor);
-            await _context.SaveChangesAsync();
+    // Remove all photos associated with the actor
+    if (actor.Photos != null && actor.Photos.Any())
+    {
+        _context.Photos.RemoveRange(actor.Photos);
+    }
 
-            return NoContent();
-        }
+    // Remove the actor
+    _context.Actors.Remove(actor);
+    await _context.SaveChangesAsync();
+
+    return NoContent();
+}
+
 
         private bool ActorExists(int id)
         {

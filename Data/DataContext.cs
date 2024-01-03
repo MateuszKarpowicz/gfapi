@@ -11,5 +11,6 @@ namespace GFapi.Data
 
         public DbSet<Actor> Actors { get; set; }
         public DbSet<AdminGold> Admins { get; set; }
+        public DbSet<Photo> Photos { get; set; }
     }
 }
