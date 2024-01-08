@@ -27,6 +27,26 @@ namespace GFapi.Controllers
             return await _context.Actors.Include(a => a.Photos).ToListAsync();
         }
 
+                // GET: api/Actors/random/8
+        [HttpGet("random/8")]
+        public async Task<ActionResult<IEnumerable<Actor>>> GetRandomActors()
+        {
+            // Pobierz wszystkich aktorów
+            var allActors = await _context.Actors.ToListAsync();
+            
+            // Sprawdź, czy istnieje wystarczająca liczba aktorów
+            if (allActors.Count < 8)
+            {
+                return BadRequest("Not enough actors to select 8 random ones.");
+            }
+            
+            // Wybierz 8 losowych aktorów
+            var randomActors = allActors.OrderBy(a => Guid.NewGuid()).Take(8).ToList();
+
+            return randomActors;
+        }
+
+
         // GET: api/Actors/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Actor>> GetActor(int id)
@@ -40,6 +60,16 @@ namespace GFapi.Controllers
 
             return actor;
         }
+
+
+
+
+
+
+
+
+
+
 
         // PUT: api/Actors/5
         // Update an existing actor
