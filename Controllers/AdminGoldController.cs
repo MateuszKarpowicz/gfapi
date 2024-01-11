@@ -19,14 +19,12 @@ namespace GFapi.Controllers
             _context = context;
         }
 
-        // Metoda do logowania
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
             var admin = await _context.Admins
                 .FirstOrDefaultAsync(a => a.Username == loginRequest.Username);
 
-            // Tu porównujemy surowe hasło z zahashowanym hasłem
             if (admin != null && VerifyPasswordHash(loginRequest.Password, admin.PasswordHash))
             {
                 return Ok(new { message = "Login successful" });
@@ -35,19 +33,16 @@ namespace GFapi.Controllers
             return Unauthorized();
         }
 
-            // Metoda do dodawania nowego admina
           [HttpPost("register")]
            public async Task<IActionResult> Register([FromBody] AdminGold newAdmin)
          {
-        newAdmin.PasswordHash = HashPassword(newAdmin.PasswordHash); // Hashowanie hasła
-        _context.Admins.Add(newAdmin);
+        newAdmin.PasswordHash = HashPassword(newAdmin.PasswordHash); 
         await _context.SaveChangesAsync();
         return Ok(new { message = "Admin created" });
          }
 
 
 
-        // Metody pomocnicze
         private string HashPassword(string password)
         {
             using var sha256 = SHA256.Create();

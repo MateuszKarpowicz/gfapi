@@ -52,7 +52,7 @@ namespace GFapi.Controllers
                 return BadRequest("Invalid photo data.");
             }
 
-            photo.ActorId = actorId; // Ensure the photo is linked to the actor
+            photo.ActorId = actorId; 
             _context.Photos.Add(photo);
             await _context.SaveChangesAsync();
 

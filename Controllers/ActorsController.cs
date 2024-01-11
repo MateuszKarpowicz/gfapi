@@ -31,16 +31,13 @@ namespace GFapi.Controllers
         [HttpGet("random/8")]
         public async Task<ActionResult<IEnumerable<Actor>>> GetRandomActors()
         {
-            // Pobierz wszystkich aktorów
             var allActors = await _context.Actors.ToListAsync();
             
-            // Sprawdź, czy istnieje wystarczająca liczba aktorów
             if (allActors.Count < 8)
             {
                 return BadRequest("Not enough actors to select 8 random ones.");
             }
             
-            // Wybierz 8 losowych aktorów
             var randomActors = allActors.OrderBy(a => Guid.NewGuid()).Take(8).ToList();
 
             return randomActors;
@@ -72,7 +69,6 @@ namespace GFapi.Controllers
 
 
         // PUT: api/Actors/5
-        // Update an existing actor
         [HttpPut("{id}")]
         public async Task<IActionResult> PutActor(int id, [FromBody] ActorInputModel actorInputModel)
         {
@@ -95,14 +91,12 @@ namespace GFapi.Controllers
     // Update actor details
     _context.Entry(actor).CurrentValues.SetValues(actorInputModel.Actor);
 
-    // Handle MainImageUrl updates
     if (actor.MainImageUrl != actorInputModel.MainImageUrl)
     {
         actor.MainImageUrl = actorInputModel.MainImageUrl;
     }
 
-    // Handle GalleryImageUrls updates
-    // First remove URLs that are not in the new list
+
     var currentUrls = actor.GalleryImageUrls.ToList();
     foreach (var url in currentUrls)
     {
@@ -112,7 +106,6 @@ namespace GFapi.Controllers
         }
     }
 
-    // Then add new URLs
     foreach (var url in actorInputModel.GalleryImageUrls)
     {
         if (!actor.GalleryImageUrls.Contains(url))
@@ -121,7 +114,6 @@ namespace GFapi.Controllers
         }
     }
 
-    // Save changes
     try
     {
         await _context.SaveChangesAsync();
@@ -142,7 +134,6 @@ namespace GFapi.Controllers
 }
 
        // POST: api/Actors
-// Create a new actor
         [HttpPost]
         public async Task<ActionResult<Actor>> PostActor([FromBody] ActorInputModel actorInputModel)
         {
@@ -151,29 +142,23 @@ namespace GFapi.Controllers
                 return BadRequest("Invalid actor data.");
             }
 
-            // Normalize the BirthDate to UTC if it exists
             if (actorInputModel.Actor.BirthDate.HasValue)
             {
                 actorInputModel.Actor.BirthDate = DateTime.SpecifyKind(actorInputModel.Actor.BirthDate.Value, DateTimeKind.Utc);
             }
 
-            // Set MainImageUrl and GalleryImageUrls from input model
             actorInputModel.Actor.MainImageUrl = actorInputModel.MainImageUrl;
             actorInputModel.Actor.GalleryImageUrls = actorInputModel.GalleryImageUrls ?? new List<string>(); // Ensure there is always a list to avoid null references
 
-            // Add the new actor to the context
             _context.Actors.Add(actorInputModel.Actor);
 
-            // Save the changes
             await _context.SaveChangesAsync();
 
-            // Return the created actor
             return CreatedAtAction("GetActor", new { id = actorInputModel.Actor.Id }, actorInputModel.Actor);
         }
 
 
         // DELETE: api/Actors/5
-        // Delete an actor
         [HttpDelete("{id}")]
 public async Task<IActionResult> DeleteActor(int id)
 {
@@ -183,13 +168,11 @@ public async Task<IActionResult> DeleteActor(int id)
         return NotFound();
     }
 
-    // Remove all photos associated with the actor
     if (actor.Photos != null && actor.Photos.Any())
     {
         _context.Photos.RemoveRange(actor.Photos);
     }
 
-    // Remove the actor
     _context.Actors.Remove(actor);
     await _context.SaveChangesAsync();
 
