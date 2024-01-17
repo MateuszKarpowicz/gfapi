@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using GFapi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GFapi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240115192148_VideoURLandHairColorAdded")]
+    partial class VideoURLandHairColorAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -52,10 +55,6 @@ namespace GFapi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("HairColor")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<int>("Height")
                         .HasColumnType("integer");
 
@@ -87,10 +86,6 @@ namespace GFapi.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
-
-                    b.Property<string>("VideoUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.HasKey("Id");
 

@@ -20,6 +20,48 @@ namespace GFapi.Controllers
             _context = context;
         }
 
+            [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<Actor>>> SearchActors([FromQuery] string gender, [FromQuery] int? ageFrom, [FromQuery] int? ageTo, [FromQuery] int? heightFrom, [FromQuery] int? heightTo, [FromQuery] string skills, [FromQuery] string languages, [FromQuery] string hairColor)
+        {
+         var query = _context.Actors.AsQueryable();
+         if (!string.IsNullOrEmpty(gender))
+        {
+            query = query.Where(a =>a.Gender == gender);
+            
+            }
+            if (ageFrom.HasValue && ageTo.HasValue)
+            
+            {
+                var today = DateTime.Today;
+                var fromBirthDate = today.AddYears(-ageFrom.Value);
+                var toBirthDate = today.AddYears(-ageTo.Value);
+                query = query.Where(a => a.BirthDate >= toBirthDate && a.BirthDate <= fromBirthDate);
+            }
+
+            if (heightFrom.HasValue && heightTo.HasValue)
+            {
+                query = query.Where(a => a.Height >= heightFrom.Value && a.Height <= heightTo.Value);
+            }
+
+            if (!string.IsNullOrEmpty(skills))
+            {
+                query = query.Where(a => a.Skills.Contains(skills));
+            }
+
+            if (!string.IsNullOrEmpty(languages))
+            {
+                query = query.Where(a => a.Languages.Contains(languages));
+            }
+
+            if (!string.IsNullOrEmpty(hairColor))
+            {
+                query = query.Where(a => a.HairColor.Contains(hairColor));
+            }
+
+            return await query.ToListAsync();}
+            
+        
+
         // GET: api/Actors
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Actor>>> GetActors()
@@ -156,6 +198,7 @@ namespace GFapi.Controllers
 
             return CreatedAtAction("GetActor", new { id = actorInputModel.Actor.Id }, actorInputModel.Actor);
         }
+
 
 
         // DELETE: api/Actors/5

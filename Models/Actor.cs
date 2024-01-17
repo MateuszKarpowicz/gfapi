@@ -22,9 +22,6 @@ namespace GFapi.Models
         [DisplayFormat(ApplyFormatInEditMode = true, DataFormatString = "{0:yyyy-MM-dd}")]
         public DateTime? BirthDate { get; set; } = null;
 
-    
-
-
         [Range(0, 300, ErrorMessage = "Height must be between 0.5 and 2.5 meters.")]
         public int Height { get; set; } = 0;
 
@@ -47,5 +44,9 @@ namespace GFapi.Models
         public List<string> GalleryImageUrls { get; set; } = new List<string>(); 
 
         public virtual ICollection<Photo> Photos { get; set; } = new List<Photo>();
+
+        public string HairColor { get; set; } = "nie podano koloru włosów";
+
+        public string VideoUrl { get; set; } = "nie podano linku do wideo";
     }
 }
