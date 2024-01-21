@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using System;
+using System.Net;
+
 
 namespace GFapi.Controllers
 {
@@ -20,45 +23,59 @@ namespace GFapi.Controllers
             _context = context;
         }
 
-            [HttpGet("search")]
+        [HttpGet("search")]
         public async Task<ActionResult<IEnumerable<Actor>>> SearchActors([FromQuery] string gender, [FromQuery] int? ageFrom, [FromQuery] int? ageTo, [FromQuery] int? heightFrom, [FromQuery] int? heightTo, [FromQuery] string skills, [FromQuery] string languages, [FromQuery] string hairColor)
         {
-         var query = _context.Actors.AsQueryable();
-         if (!string.IsNullOrEmpty(gender))
-        {
-            query = query.Where(a =>a.Gender == gender);
-            
-            }
-            if (ageFrom.HasValue && ageTo.HasValue)
-            
+            var query = _context.Actors.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(gender))
             {
-                var today = DateTime.Today;
-                var fromBirthDate = today.AddYears(-ageFrom.Value);
-                var toBirthDate = today.AddYears(-ageTo.Value);
-                query = query.Where(a => a.BirthDate >= toBirthDate && a.BirthDate <= fromBirthDate);
+                query = query.Where(a => a.Gender == gender);
             }
 
-            if (heightFrom.HasValue && heightTo.HasValue)
+            if (ageFrom.HasValue)
             {
-                query = query.Where(a => a.Height >= heightFrom.Value && a.Height <= heightTo.Value);
+                var dateFrom = DateTime.UtcNow.AddYears(-ageFrom.Value);
+                query = query.Where(a => a.BirthDate <= dateFrom);
+            }
+            if (ageTo.HasValue)
+            {
+                var dateTo = DateTime.UtcNow.AddYears(-ageTo.Value);
+                query = query.Where(a => a.BirthDate >= dateTo);
+            }
+            if (heightFrom.HasValue)
+            {
+                query = query.Where(a => a.Height >= heightFrom.Value);
+            }
+            if (heightTo.HasValue)
+            {
+                query = query.Where(a => a.Height <= heightTo.Value);
+            }
+            if (!string.IsNullOrWhiteSpace(skills))
+            {
+                var skillsArray = skills.Split(',').Select(skill => skill.Trim().ToLower());
+                foreach (var skill in skillsArray)
+                {
+                    query = query.Where(a => a.Skills.ToLower().Contains(skill));
+                }
             }
 
-            if (!string.IsNullOrEmpty(skills))
+            if (!string.IsNullOrWhiteSpace(languages))
             {
-                query = query.Where(a => a.Skills.Contains(skills));
+                var languagesArray = languages.Split(',').Select(language => language.Trim().ToLower());
+                foreach (var language in languagesArray)
+                {
+                    query = query.Where(a => a.Languages.ToLower().Contains(language));
+                }
             }
-
-            if (!string.IsNullOrEmpty(languages))
-            {
-                query = query.Where(a => a.Languages.Contains(languages));
-            }
-
-            if (!string.IsNullOrEmpty(hairColor))
+            if (!string.IsNullOrWhiteSpace(hairColor))
             {
                 query = query.Where(a => a.HairColor.Contains(hairColor));
             }
+            return await query.ToListAsync();
+        }
+   
 
-            return await query.ToListAsync();}
+
             
         
 
