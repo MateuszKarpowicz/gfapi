@@ -23,8 +23,9 @@ builder.Services.AddCors(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-string connectionString = "Host=localhost;Database=GoldfingerDB;Username=postgres;Password=Cracovia1906";
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<DataContext>(options => options.UseNpgsql(connectionString));
+
 
 var app = builder.Build();
 
