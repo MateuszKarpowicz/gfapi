@@ -9,6 +9,6 @@ namespace GFapi.Models
     {
         public Actor Actor { get; set; }
         public string MainImageUrl { get; set; }
-        public List<string> GalleryImageUrls { get; set; }
+        public List<string> GalleryImageUrlsList { get; set; }
     }
 }

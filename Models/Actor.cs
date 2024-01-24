@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using GFapi.Data;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 
 namespace GFapi.Models
 {
@@ -41,12 +43,21 @@ namespace GFapi.Models
         public string PolskieKinoUrl { get; set; } = "";
 
         public string MainImageUrl { get; set; } = ""; 
-        public List<string> GalleryImageUrls { get; set; } = new List<string>(); 
+        public string GalleryImageUrls { get; set; } = "";
 
+            
+        [NotMapped]
+        public List<string> GalleryImageUrlsList
+        {
+            get => GalleryImageUrls.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+            set => GalleryImageUrls = String.Join(",", value);
+        }
         public virtual ICollection<Photo> Photos { get; set; } = new List<Photo>();
 
         public string HairColor { get; set; } = "nie podano koloru włosów";
 
         public string VideoUrl { get; set; } = "nie podano linku do wideo";
+
+        }
+
     }
-}

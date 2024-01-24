@@ -1,13 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using GFapi.Data;
 using GFapi.Models;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 using Newtonsoft.Json;
 using System;
-using System.Net;
 
 
 namespace GFapi.Controllers
@@ -23,176 +22,137 @@ namespace GFapi.Controllers
             _context = context;
         }
 
-        [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<Actor>>> SearchActors([FromQuery] string gender, [FromQuery] int? ageFrom, [FromQuery] int? ageTo, [FromQuery] int? heightFrom, [FromQuery] int? heightTo, [FromQuery] string skills, [FromQuery] string languages, [FromQuery] string hairColor)
-        {
-            var query = _context.Actors.AsQueryable();
-            if (!string.IsNullOrWhiteSpace(gender))
-            {
-                query = query.Where(a => a.Gender == gender);
-            }
 
+
+    // GET: api/Actors/search
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<Actor>>> SearchActors([FromQuery] string gender, [FromQuery] int? ageFrom, [FromQuery] int? ageTo, [FromQuery] int? heightFrom, [FromQuery] int? heightTo, [FromQuery] string skills, [FromQuery] string languages, [FromQuery] string hairColor)
+    {
+        var query = _context.Actors.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(gender))
+        {
+            query = query.Where(a => a.Gender == gender);
+        }
+
+        if (ageFrom.HasValue || ageTo.HasValue)
+        {
+            var now = DateTime.UtcNow;
             if (ageFrom.HasValue)
             {
-                var dateFrom = DateTime.UtcNow.AddYears(-ageFrom.Value);
-                query = query.Where(a => a.BirthDate <= dateFrom);
+                var dateFrom = now.AddYears(-ageFrom.Value);
+                query = query.Where(a => a.BirthDate.HasValue && a.BirthDate.Value <= dateFrom);
             }
             if (ageTo.HasValue)
             {
-                var dateTo = DateTime.UtcNow.AddYears(-ageTo.Value);
-                query = query.Where(a => a.BirthDate >= dateTo);
+                var dateTo = now.AddYears(-ageTo.Value);
+                query = query.Where(a => a.BirthDate.HasValue && a.BirthDate.Value >= dateTo);
             }
-            if (heightFrom.HasValue)
-            {
-                query = query.Where(a => a.Height >= heightFrom.Value);
-            }
-            if (heightTo.HasValue)
-            {
-                query = query.Where(a => a.Height <= heightTo.Value);
-            }
-            if (!string.IsNullOrWhiteSpace(skills))
-            {
-                var skillsArray = skills.Split(',').Select(skill => skill.Trim().ToLower());
-                foreach (var skill in skillsArray)
-                {
-                    query = query.Where(a => a.Skills.ToLower().Contains(skill));
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(languages))
-            {
-                var languagesArray = languages.Split(',').Select(language => language.Trim().ToLower());
-                foreach (var language in languagesArray)
-                {
-                    query = query.Where(a => a.Languages.ToLower().Contains(language));
-                }
-            }
-            if (!string.IsNullOrWhiteSpace(hairColor))
-            {
-                query = query.Where(a => a.HairColor.Contains(hairColor));
-            }
-            return await query.ToListAsync();
-        }
-   
-
-
-            
-        
-
-        // GET: api/Actors
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Actor>>> GetActors()
-        {
-            return await _context.Actors.Include(a => a.Photos).ToListAsync();
         }
 
-                // GET: api/Actors/random/8
-        [HttpGet("random/8")]
-        public async Task<ActionResult<IEnumerable<Actor>>> GetRandomActors()
+        if (heightFrom.HasValue)
         {
-            var allActors = await _context.Actors.ToListAsync();
-            
-            if (allActors.Count < 8)
-            {
-                return BadRequest("Not enough actors to select 8 random ones.");
-            }
-            
-            var randomActors = allActors.OrderBy(a => Guid.NewGuid()).Take(8).ToList();
-
-            return randomActors;
+            query = query.Where(a => a.Height >= heightFrom.Value);
+        }
+        if (heightTo.HasValue)
+        {
+            query = query.Where(a => a.Height <= heightTo.Value);
         }
 
-
-        // GET: api/Actors/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Actor>> GetActor(int id)
+        if (!string.IsNullOrWhiteSpace(skills))
         {
-            var actor = await _context.Actors.Include(a => a.Photos).FirstOrDefaultAsync(a => a.Id == id);
-
-            if (actor == null)
-            {
-                return NotFound();
-            }
-
-            return actor;
+            var skillsArray = skills.Split(',').Select(skill => skill.Trim().ToLower());
+            query = query.Where(a => skillsArray.Any(skill => a.Skills.ToLower().Contains(skill)));
         }
 
-
-
-
-
-
-
-
-
-
-
-        // PUT: api/Actors/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutActor(int id, [FromBody] ActorInputModel actorInputModel)
+        if (!string.IsNullOrWhiteSpace(languages))
         {
-            if (id != actorInputModel.Actor.Id)
-            {
-                return BadRequest();
-            }
+            var languagesArray = languages.Split(',').Select(language => language.Trim().ToLower());
+            query = query.Where(a => languagesArray.Any(language => a.Languages.ToLower().Contains(language)));
+        }
 
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+        if (!string.IsNullOrWhiteSpace(hairColor))
+        {
+            query = query.Where(a => a.HairColor.ToLower().Contains(hairColor.ToLower()));
+        }
 
-             var actor = await _context.Actors.FindAsync(id);
-    if (actor == null)
-    {
-        return NotFound();
+        var actors = await query.ToListAsync();
+        return actors;
     }
 
-    // Update actor details
-    _context.Entry(actor).CurrentValues.SetValues(actorInputModel.Actor);
-
-    if (actor.MainImageUrl != actorInputModel.MainImageUrl)
+    // GET: api/Actors/random/8
+    [HttpGet("random/8")]
+    public async Task<ActionResult<IEnumerable<Actor>>> GetRandomActors()
     {
-        actor.MainImageUrl = actorInputModel.MainImageUrl;
+        var allActors = await _context.Actors.ToListAsync();
+        if (allActors.Count < 8)
+        {
+            return BadRequest("Not enough actors to select 8 random ones.");
+        }
+
+        var randomActors = allActors.OrderBy(a => Guid.NewGuid()).Take(8).ToList();
+        return randomActors;
     }
 
 
-    var currentUrls = actor.GalleryImageUrls.ToList();
-    foreach (var url in currentUrls)
-    {
-        if (!actorInputModel.GalleryImageUrls.Contains(url))
-        {
-            actor.GalleryImageUrls.Remove(url);
-        }
-    }
+[HttpGet]
+public async Task<ActionResult<IEnumerable<Actor>>> GetActors()
+{
+    var actors = await _context.Actors.ToListAsync();
 
-    foreach (var url in actorInputModel.GalleryImageUrls)
-    {
-        if (!actor.GalleryImageUrls.Contains(url))
-        {
-            actor.GalleryImageUrls.Add(url);
-        }
-    }
 
-    try
-    {
-        await _context.SaveChangesAsync();
-    }
-    catch (DbUpdateConcurrencyException)
-    {
-        if (!ActorExists(id))
-        {
-            return NotFound();
-        }
-        else
-        {
-            throw;
-        }
-    }
-
-    return NoContent();
+    return actors;
 }
 
-       // POST: api/Actors
+
+            [HttpGet("{id}")]
+            public async Task<ActionResult<Actor>> GetActor(int id)
+            {
+                var actor = await _context.Actors.FindAsync(id);
+
+                if (actor == null)
+                {
+                    return NotFound();
+                }
+
+               
+
+                return actor;
+            }
+
+            [HttpPut("{id}")]
+            public async Task<IActionResult> PutActor(int id, [FromBody] ActorInputModel actorInputModel)
+            {
+                if (id != actorInputModel.Actor.Id)
+                {
+                    return BadRequest();
+                }
+
+                var actor = await _context.Actors.FindAsync(id);
+                if (actor == null)
+                {
+                    return NotFound();
+                }
+
+                _context.Entry(actor).CurrentValues.SetValues(actorInputModel.Actor);
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!ActorExists(id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+
+                return NoContent();
+            }
         [HttpPost]
         public async Task<ActionResult<Actor>> PostActor([FromBody] ActorInputModel actorInputModel)
         {
@@ -201,44 +161,28 @@ namespace GFapi.Controllers
                 return BadRequest("Invalid actor data.");
             }
 
-            if (actorInputModel.Actor.BirthDate.HasValue)
-            {
-                actorInputModel.Actor.BirthDate = DateTime.SpecifyKind(actorInputModel.Actor.BirthDate.Value, DateTimeKind.Utc);
-            }
-
-            actorInputModel.Actor.MainImageUrl = actorInputModel.MainImageUrl;
-            actorInputModel.Actor.GalleryImageUrls = actorInputModel.GalleryImageUrls ?? new List<string>(); // Ensure there is always a list to avoid null references
-
+            // Konwersja listy URL-i na string
             _context.Actors.Add(actorInputModel.Actor);
-
             await _context.SaveChangesAsync();
-
             return CreatedAtAction("GetActor", new { id = actorInputModel.Actor.Id }, actorInputModel.Actor);
         }
 
 
 
-        // DELETE: api/Actors/5
         [HttpDelete("{id}")]
-public async Task<IActionResult> DeleteActor(int id)
-{
-    var actor = await _context.Actors.Include(a => a.Photos).FirstOrDefaultAsync(a => a.Id == id);
-    if (actor == null)
-    {
-        return NotFound();
-    }
+        public async Task<IActionResult> DeleteActor(int id)
+        {
+            var actor = await _context.Actors.FindAsync(id);
+            if (actor == null)
+            {
+                return NotFound();
+            }
 
-    if (actor.Photos != null && actor.Photos.Any())
-    {
-        _context.Photos.RemoveRange(actor.Photos);
-    }
+            _context.Actors.Remove(actor);
+            await _context.SaveChangesAsync();
 
-    _context.Actors.Remove(actor);
-    await _context.SaveChangesAsync();
-
-    return NoContent();
-}
-
+            return NoContent();
+        }
 
         private bool ActorExists(int id)
         {

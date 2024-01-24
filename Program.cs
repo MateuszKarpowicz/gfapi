@@ -2,6 +2,7 @@ using GFapi.Data;
 using GFapi.Models;
 using Microsoft.EntityFrameworkCore;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -23,8 +24,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<DataContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<DataContext>(options => options.UseSqlite("Data Source=mydatabase.db"));
 
 
 var app = builder.Build();
@@ -38,7 +38,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowAll"); // Użyj zdefiniowanej polityki CORS
 
-// app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
